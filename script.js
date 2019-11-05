@@ -21,6 +21,7 @@ var startClickPos, endClickPos = {
 }
 var dragging = false;
 var selectedCell = null;
+var inGameRef;
 
 function preload ()
 {
@@ -46,6 +47,7 @@ function create ()
   background.displayHeight = window.innerHeight;
   background.displayWidth = window.innerWidth;
   SetField(this);
+  inGameRef = this;
   this.input.on('pointermove', StartSwipe);
   this.input.on('pointerup', StopSwipe);
 }
@@ -135,17 +137,28 @@ function SwitchCells(cell1, cell2) {
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
 
-  FindMatches(cell1);
-  FindMatches(cell2);
+  FindMatches(cell1, cell2);
 }
 
-function FindMatches(cell) {
-  var horizonMatches = HorizontalMatch(cell);
-  var vertiMatches = VerticalMatch(cell);
+function FindMatches(cell1, cell2) {
+  var horizonMatches1 = HorizontalMatch(cell1);
+  var vertiMatches1 = VerticalMatch(cell1);
+  var horizonMatches2 = HorizontalMatch(cell2);
+  var vertiMatches2 = VerticalMatch(cell2);
   var allMatches = [];
-  Array.prototype.push.apply(allMatches, horizonMatches);
-  Array.prototype.push.apply(allMatches, vertiMatches);
+  Array.prototype.push.apply(allMatches, horizonMatches1);
+  Array.prototype.push.apply(allMatches, vertiMatches1);
+  Array.prototype.push.apply(allMatches, horizonMatches2);
+  Array.prototype.push.apply(allMatches, vertiMatches2);
   allMatches = Array.from(new Set(allMatches));
+  RemoveMatches(allMatches);
+}
+
+function RemoveMatches(matches) {
+  for (var i = 0; i < matches.length; i++) {
+    playfield[matches[i].column][matches[i].row].destroy(inGameRef);
+    playfield[matches[i].column][matches[i].row] = null;
+  }
 }
 
 function HorizontalMatch(cell) {
