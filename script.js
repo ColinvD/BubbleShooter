@@ -14,6 +14,13 @@ var width = 6;
 var height = 10;
 var playfield = [];
 var types = [];
+var startClickPos, endClickPos = {
+  x: null,
+  y: null,
+  z: null
+}
+var dragging = false;
+var selectedCell = null;
 
 function preload ()
 {
@@ -39,6 +46,8 @@ function create ()
   background.displayHeight = window.innerHeight;
   background.displayWidth = window.innerWidth;
   SetField(this);
+  this.input.on('pointermove', StartSwipe);
+  this.input.on('pointerup', StopSwipe);
 }
 
 function update ()
@@ -52,37 +61,114 @@ function SetField(myObject) {
       randNum = Math.floor((Math.random() * types.length));
       cell = {};
       cell.tag = types[randNum];
-      while (ScanForMatches(i,j,cell)) {
+      while (ScanForStartMatches(i,j,cell)) {
         randNum = Math.floor((Math.random() * types.length));
         cell.tag = types[randNum];
       }
       cell = myObject.add.image(60 + i * 60, 60 + j * 60, types[randNum]).setScale(0.1);
       cell.name = "( " + i + " , " + j + " )";
       cell.tag = types[randNum];
+      cell.column = i;
+      cell.row = j;
+      cell.selectable = true;
+      cell.matched = false;
+      cell.setInteractive();
+      cell.on('pointerdown', Select);
       playfield[i][j] = cell;
     }
   }
+}
 
-  function ScanForMatches(column, row, object) {
-    if (column > 1 && row > 1) {
-      if (playfield[column -1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
-        return true;
-      }
-      if (playfield[column][row-1].tag == object.tag && playfield[column][row-2].tag == object.tag) {
-        return true;
-      }
-    } else if (column <= 1 || row <= 1){
-      if (row > 1) {
-        if (playfield[column][row -1].tag == object.tag && playfield[column][row -2].tag == object.tag) {
-          return true;
-        }
-      }
-      if (column > 1) {
-        if (playfield[column-1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
-          return true;
+function Select(pointer) {
+  if (this.selectable) {
+    dragging = true;
+    if (selectedCell == null) {
+      this.setScale(0.15);
+      selectedCell = this;
+    } else {
+      if (this == selectedCell) {
+        selectedCell.setScale(0.1);
+        selectedCell = null;
+      } else {
+        if (((this.column == selectedCell.column +1 || this.column == selectedCell.column - 1) && this.row == selectedCell.row) || ((this.row == selectedCell.row +1 || this.row == selectedCell.row - 1) && this.column == selectedCell.column)) {
+          console.log("They are next to eachother!!!");
+          selectedCell.setScale(0.1);
+          SwitchCells(this, selectedCell);
+          selectedCell = null;
+        } else {
+          selectedCell.setScale(0.1);
+          this.setScale(0.15);
+          selectedCell = this;
         }
       }
     }
-    return false;
   }
+}
+
+function StartSwipe(pointer) {
+  if (dragging) {
+    console.log(pointer.worldX);
+  }
+}
+
+function StopSwipe(pointer) {
+  dragging = false;
+}
+
+function SwitchCells(cell1, cell2) {
+  tempName = cell1.name;
+  tempCol = cell1.column;
+  tempRow = cell1.row;
+  tempPosX = cell1.x;
+  tempPosY = cell1.y;
+
+  cell1.name = cell2.name;
+  cell1.column = cell2.column;
+  cell1.row = cell2.row;
+  cell1.setPosition(cell2.x, cell2.y);
+
+  cell2.name = tempName;
+  cell2.column = tempCol;
+  cell2.row = tempRow;
+  cell2.setPosition(tempPosX, tempPosY);
+
+  playfield[cell1.column][cell1.row] = cell1;
+  playfield[cell2.column][cell2.row] = cell2;
+}
+
+function FindMatches() {
+  /*if () {
+
+  }*/
+}
+
+function HorizontalMatch() {
+
+}
+
+function VerticalMatch() {
+
+}
+
+function ScanForStartMatches(column, row, object) {
+  if (column > 1 && row > 1) {
+    if (playfield[column -1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
+      return true;
+    }
+    if (playfield[column][row-1].tag == object.tag && playfield[column][row-2].tag == object.tag) {
+      return true;
+    }
+  } else if (column <= 1 || row <= 1){
+    if (row > 1) {
+      if (playfield[column][row -1].tag == object.tag && playfield[column][row -2].tag == object.tag) {
+        return true;
+      }
+    }
+    if (column > 1) {
+      if (playfield[column-1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
