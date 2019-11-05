@@ -134,20 +134,84 @@ function SwitchCells(cell1, cell2) {
 
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
+
+  FindMatches(cell1);
+  FindMatches(cell2);
 }
 
-function FindMatches() {
-  /*if () {
-
-  }*/
+function FindMatches(cell) {
+  var horizonMatches = HorizontalMatch(cell);
+  var vertiMatches = VerticalMatch(cell);
+  var allMatches = [];
+  Array.prototype.push.apply(allMatches, horizonMatches);
+  Array.prototype.push.apply(allMatches, vertiMatches);
+  allMatches = Array.from(new Set(allMatches));
 }
 
-function HorizontalMatch() {
+function HorizontalMatch(cell) {
+  var leftlist = [cell];
+  var rightlist = [cell];
+  var horizonList = [];
 
+  for (var i = 0; i < leftlist.length; i++) {
+    if (leftlist[i].column > 0) {
+      if (leftlist[i].tag == playfield[leftlist[i].column-1][leftlist[i].row].tag) {
+        leftlist.push(playfield[leftlist[i].column-1][leftlist[i].row]);
+      }
+    }
+  }
+
+  for (var i = 0; i < rightlist.length; i++) {
+    if (rightlist[i].column < width - 1) {
+      if (rightlist[i].tag == playfield[rightlist[i].column+1][rightlist[i].row].tag) {
+        rightlist.push(playfield[rightlist[i].column+1][rightlist[i].row]);
+      }
+    }
+  }
+
+  Array.prototype.push.apply(horizonList, leftlist);
+  Array.prototype.push.apply(horizonList, rightlist);
+  horizonList.shift();
+
+  if (horizonList.length >= 3) {
+    for (var i = 0; i < horizonList.length; i++) {
+      horizonList[i].setScale(0.09);
+    }
+    return horizonList;
+  }
 }
 
-function VerticalMatch() {
+function VerticalMatch(cell) {
+  var uplist = [cell];
+  var downlist = [cell];
+  var vertiList = [];
 
+  for (var i = 0; i < uplist.length; i++) {
+    if (uplist[i].row > 0) {
+      if (uplist[i].tag == playfield[uplist[i].column][uplist[i].row-1].tag) {
+        uplist.push(playfield[uplist[i].column][uplist[i].row-1]);
+      }
+    }
+  }
+
+  for (var i = 0; i < downlist.length; i++) {
+    if (downlist[i].row < height - 1) {
+      if (downlist[i].tag == playfield[downlist[i].column][downlist[i].row+1].tag) {
+        downlist.push(playfield[downlist[i].column][downlist[i].row+1]);
+      }
+    }
+  }
+
+  Array.prototype.push.apply(vertiList, uplist);
+  Array.prototype.push.apply(vertiList, downlist);
+  vertiList.shift();
+
+  if (vertiList.length >= 3) {
+    for (var i = 0; i < vertiList.length; i++) {
+      vertiList[i].setScale(0.09);
+    }
+    return vertiList;
+  }
 }
 
 function ScanForStartMatches(column, row, object) {
