@@ -122,22 +122,22 @@ function SwitchCells(cell1, cell2) {
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
 
-  FindMatches(cell1, cell2);
-}
-
-function FindMatches(cell1, cell2) {
-  var horizonMatches1 = HorizontalMatch(cell1);
-  var vertiMatches1 = VerticalMatch(cell1);
-  var horizonMatches2 = HorizontalMatch(cell2);
-  var vertiMatches2 = VerticalMatch(cell2);
-  var allMatches = [];
-  Array.prototype.push.apply(allMatches, horizonMatches1);
-  Array.prototype.push.apply(allMatches, vertiMatches1);
-  Array.prototype.push.apply(allMatches, horizonMatches2);
-  Array.prototype.push.apply(allMatches, vertiMatches2);
+  allMatches = [];
+  Array.prototype.push.apply(allMatches, FindMatches(cell1));
+  Array.prototype.push.apply(allMatches, FindMatches(cell2));
   allMatches = Array.from(new Set(allMatches));
   RemoveMatches(allMatches);
   MoveCellsDown();
+  Refill();
+}
+
+function FindMatches(cell) {
+  var horizonMatches = HorizontalMatch(cell);
+  var vertiMatches = VerticalMatch(cell);
+  var allMatches = [];
+  Array.prototype.push.apply(allMatches, horizonMatches);
+  Array.prototype.push.apply(allMatches, vertiMatches);
+  return allMatches;
 }
 
 function MoveCellsDown() {
@@ -153,6 +153,26 @@ function MoveCellsDown() {
       }
     }
     nullcount = 0;
+  }
+}
+
+function Refill() {
+  var emptySpots = [];
+  for (var i = 0; i < width; i++) {
+    for (var j = 0; j < height; j++) {
+      if (playfield[i][j] == null) {
+        spot = {i,j};
+        emptySpots.push(spot);
+      }
+    }
+  }
+
+  for (var i = emptySpots.length - 1; i >= 0; i--) {
+
+    randNum = Math.floor((Math.random() * types.length));
+    cell = new Cell(emptySpots[i].i,emptySpots[i].j,types[randNum],inGameRef, cellSpacing);
+    cell.on('pointerdown', Select);
+    playfield[emptySpots[i].i][emptySpots[i].j] = cell;
   }
 }
 
