@@ -90,6 +90,15 @@ function Select(pointer) {
           console.log("They are next to eachother!!!");
           selectedCell.setScale(0.1);
           SwitchCells(this, selectedCell);
+          allMatches = FindMatches([this, selectedCell]);
+          allMatches = Array.from(new Set(allMatches));
+          if (allMatches.length > 0) {
+            RemoveMatches(allMatches);
+            MoveCellsDown();
+            Refill();
+          } else {
+            SwitchCells(this, selectedCell);
+          }
           selectedCell = null;
         } else {
           selectedCell.setScale(0.1);
@@ -112,23 +121,12 @@ function StopSwipe(pointer) {
 }
 
 function SwitchCells(cell1, cell2) {
-  tempName = cell1.name;
   tempCol = cell1.column;
   tempRow = cell1.row;
-  tempPosX = cell1.x;
-  tempPosY = cell1.y;
   cell1.MoveToNewCell(cell2.column, cell2.row);
   cell2.MoveToNewCell(tempCol, tempRow);
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
-
-  allMatches = FindMatches([cell1,cell2]);
-  allMatches = Array.from(new Set(allMatches));
-  if (allMatches.length > 0) {
-    RemoveMatches(allMatches);
-    MoveCellsDown();
-    Refill();
-  }
 }
 
 function FindMatches(cells) {
