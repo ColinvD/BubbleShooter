@@ -12,6 +12,7 @@ var config = {
 var game = new Phaser.Game(config);
 var width = 6;
 var height = 10;
+var cellSpacing = 60;
 var playfield = [];
 var types = [];
 var startClickPos, endClickPos = {
@@ -41,13 +42,13 @@ function preload ()
 
 function create ()
 {
+  inGameRef = this;
   background = this.add.image(765,375,"background");
   background.height = window.innerHeight;
   background.width = window.innerWidth;
   background.displayHeight = window.innerHeight;
   background.displayWidth = window.innerWidth;
   SetField(this);
-  inGameRef = this;
   this.input.on('pointermove', StartSwipe);
   this.input.on('pointerup', StopSwipe);
 }
@@ -56,25 +57,18 @@ function update ()
 {
 }
 
-function SetField(myObject) {
+function SetField() {
   for (var i = 0; i < width; i++) {
     playfield[i] = [];
     for (var j = 0; j < height; j++) {
       randNum = Math.floor((Math.random() * types.length));
-      cell = {};
-      cell.tag = types[randNum];
-      while (ScanForStartMatches(i,j,cell)) {
+      randType = {};
+      randType.tag = types[randNum];
+      while (ScanForStartMatches(i,j,randType)) {
         randNum = Math.floor((Math.random() * types.length));
-        cell.tag = types[randNum];
+        randType.tag = types[randNum];
       }
-      cell = myObject.add.image(60 + i * 60, 60 + j * 60, types[randNum]).setScale(0.1);
-      cell.name = "( " + i + " , " + j + " )";
-      cell.tag = types[randNum];
-      cell.column = i;
-      cell.row = j;
-      cell.selectable = true;
-      cell.matched = false;
-      cell.setInteractive();
+      cell = new Cell(i,j,randType.tag,inGameRef, cellSpacing);
       cell.on('pointerdown', Select);
       playfield[i][j] = cell;
     }
@@ -85,6 +79,7 @@ function Select(pointer) {
   if (this.selectable) {
     dragging = true;
     if (selectedCell == null) {
+      console.log(this);
       this.setScale(0.15);
       selectedCell = this;
     } else {
@@ -123,21 +118,18 @@ function SwitchCells(cell1, cell2) {
   tempRow = cell1.row;
   tempPosX = cell1.x;
   tempPosY = cell1.y;
-
-  cell1.name = cell2.name;
-  cell1.column = cell2.column;
-  cell1.row = cell2.row;
-  cell1.setPosition(cell2.x, cell2.y);
-
-  cell2.name = tempName;
-  cell2.column = tempCol;
-  cell2.row = tempRow;
-  cell2.setPosition(tempPosX, tempPosY);
-
-  playfield[cell1.column][cell1.row] = cell1;
-  playfield[cell2.column][cell2.row] = cell2;
+  MoveCellToNewSpot(cell1, cell2.name, cell2.column, cell2.row, cell2.x, cell2.y);
+  MoveCellToNewSpot(cell2, tempName, tempCol, tempRow, tempPosX, tempPosY);
 
   FindMatches(cell1, cell2);
+}
+
+function MoveCellToNewSpot(cell, newName, newColumn, newRow, newX, newY) {
+  cell.name = newName;
+  cell.column = newColumn;
+  cell.row = newRow;
+  cell.setPosition(newX, newY);
+  playfield[cell.column][cell.row] = cell;
 }
 
 function FindMatches(cell1, cell2) {
@@ -152,6 +144,20 @@ function FindMatches(cell1, cell2) {
   Array.prototype.push.apply(allMatches, vertiMatches2);
   allMatches = Array.from(new Set(allMatches));
   RemoveMatches(allMatches);
+}
+
+function MoveCellsDown() {
+  var nullcount = 0;
+  for (var i = width -1; i >= 0; i--) {
+    for (var j = height -1; j >= 0; j--) {
+      if (playfield[i,j] == null) {
+        nullcount++;
+      } else if(nullcount > 0){
+
+      }
+    }
+    nullcount = 0;
+  }
 }
 
 function RemoveMatches(matches) {
