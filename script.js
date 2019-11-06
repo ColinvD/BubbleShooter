@@ -79,7 +79,6 @@ function Select(pointer) {
   if (this.selectable) {
     dragging = true;
     if (selectedCell == null) {
-      console.log(this);
       this.setScale(0.15);
       selectedCell = this;
     } else {
@@ -118,18 +117,12 @@ function SwitchCells(cell1, cell2) {
   tempRow = cell1.row;
   tempPosX = cell1.x;
   tempPosY = cell1.y;
-  MoveCellToNewSpot(cell1, cell2.name, cell2.column, cell2.row, cell2.x, cell2.y);
-  MoveCellToNewSpot(cell2, tempName, tempCol, tempRow, tempPosX, tempPosY);
+  cell1.MoveToNewCell(cell2.column, cell2.row);
+  cell2.MoveToNewCell(tempCol, tempRow);
+  playfield[cell1.column][cell1.row] = cell1;
+  playfield[cell2.column][cell2.row] = cell2;
 
   FindMatches(cell1, cell2);
-}
-
-function MoveCellToNewSpot(cell, newName, newColumn, newRow, newX, newY) {
-  cell.name = newName;
-  cell.column = newColumn;
-  cell.row = newRow;
-  cell.setPosition(newX, newY);
-  playfield[cell.column][cell.row] = cell;
 }
 
 function FindMatches(cell1, cell2) {
@@ -144,16 +137,19 @@ function FindMatches(cell1, cell2) {
   Array.prototype.push.apply(allMatches, vertiMatches2);
   allMatches = Array.from(new Set(allMatches));
   RemoveMatches(allMatches);
+  MoveCellsDown();
 }
 
 function MoveCellsDown() {
   var nullcount = 0;
   for (var i = width -1; i >= 0; i--) {
     for (var j = height -1; j >= 0; j--) {
-      if (playfield[i,j] == null) {
+      if (playfield[i][j] == null) {
         nullcount++;
       } else if(nullcount > 0){
-
+        playfield[i][j].MoveToNewCell(i, j+nullcount);
+        playfield[i][j+nullcount] = playfield[i][j];
+        playfield[i][j] = null;
       }
     }
     nullcount = 0;
