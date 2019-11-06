@@ -122,21 +122,23 @@ function SwitchCells(cell1, cell2) {
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
 
-  allMatches = [];
-  Array.prototype.push.apply(allMatches, FindMatches(cell1));
-  Array.prototype.push.apply(allMatches, FindMatches(cell2));
+  allMatches = FindMatches([cell1,cell2]);
   allMatches = Array.from(new Set(allMatches));
-  RemoveMatches(allMatches);
-  MoveCellsDown();
-  Refill();
+  if (allMatches.length > 0) {
+    RemoveMatches(allMatches);
+    MoveCellsDown();
+    Refill();
+  }
 }
 
-function FindMatches(cell) {
-  var horizonMatches = HorizontalMatch(cell);
-  var vertiMatches = VerticalMatch(cell);
+function FindMatches(cells) {
   var allMatches = [];
-  Array.prototype.push.apply(allMatches, horizonMatches);
-  Array.prototype.push.apply(allMatches, vertiMatches);
+  for (var i = 0; i < cells.length; i++) {
+    var horizonMatches = HorizontalMatch(cells[i]);
+    var vertiMatches = VerticalMatch(cells[i]);
+    Array.prototype.push.apply(allMatches, horizonMatches);
+    Array.prototype.push.apply(allMatches, vertiMatches);
+  }
   return allMatches;
 }
 
@@ -168,11 +170,21 @@ function Refill() {
   }
 
   for (var i = emptySpots.length - 1; i >= 0; i--) {
-
     randNum = Math.floor((Math.random() * types.length));
     cell = new Cell(emptySpots[i].i,emptySpots[i].j,types[randNum],inGameRef, cellSpacing);
     cell.on('pointerdown', Select);
     playfield[emptySpots[i].i][emptySpots[i].j] = cell;
+  }
+
+  allMatches = [];
+  for (var i = 0; i < width; i++) {
+    Array.prototype.push.apply(allMatches, FindMatches(playfield[i]));
+  }
+  allMatches = Array.from(new Set(allMatches));
+  if (allMatches.length > 0) {
+    RemoveMatches(allMatches);
+    MoveCellsDown();
+    Refill();
   }
 }
 
