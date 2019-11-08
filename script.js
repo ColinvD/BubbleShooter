@@ -21,6 +21,7 @@ var startClickPos, endClickPos = {
   z: null
 }
 var dragging = false;
+var canPick = true;
 var selectedCell = null;
 var inGameRef;
 
@@ -76,7 +77,7 @@ function SetField() {
 }
 
 function Select(pointer) {
-  if (this.selectable) {
+  if (canPick) {
     dragging = true;
     if (selectedCell == null) {
       this.setScale(0.15);
@@ -88,16 +89,19 @@ function Select(pointer) {
       } else {
         if (((this.column == selectedCell.column +1 || this.column == selectedCell.column - 1) && this.row == selectedCell.row) || ((this.row == selectedCell.row +1 || this.row == selectedCell.row - 1) && this.column == selectedCell.column)) {
           console.log("They are next to eachother!!!");
+          canPick = false;
           selectedCell.setScale(0.1);
           SwitchCells(this, selectedCell);
           allMatches = FindMatches([this, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            RemoveMatches(allMatches);
-            MoveCellsDown();
-            Refill();
+            setTimeout(RemoveMatches.bind(null, allMatches), 300);
+            setTimeout(MoveCellsDown, 600);
+            setTimeout(Refill, 900);
           } else {
-            SwitchCells(this, selectedCell);
+            setTimeout(SwitchCells.bind(null, this, selectedCell),300);
+            canPick = true;
+            console.log("test");
           }
           selectedCell = null;
         } else {
@@ -180,9 +184,11 @@ function Refill() {
   }
   allMatches = Array.from(new Set(allMatches));
   if (allMatches.length > 0) {
-    RemoveMatches(allMatches);
-    MoveCellsDown();
-    Refill();
+    setTimeout(RemoveMatches.bind(null, allMatches), 300);
+    setTimeout(MoveCellsDown, 600);
+    setTimeout(Refill, 900);
+  } else {
+    canPick = true;
   }
 }
 
