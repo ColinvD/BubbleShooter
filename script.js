@@ -24,6 +24,9 @@ var dragging = false;
 var canPick = true;
 var selectedCell = null;
 var inGameRef;
+var movingCells = 0;
+var movesCompleted = 0;
+var started = false;
 
 function preload ()
 {
@@ -56,6 +59,10 @@ function create ()
 
 function update ()
 {
+  if (movesCompleted == movingCells && started) {
+    started = false;
+    Refill();
+  }
 }
 
 function SetField() {
@@ -95,9 +102,10 @@ function Select(pointer) {
           allMatches = FindMatches([this, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            setTimeout(RemoveMatches.bind(null, allMatches), 300);
-            setTimeout(MoveCellsDown, 600);
-            setTimeout(Refill, 900);
+            RemoveMatches(allMatches);
+            /*setTimeout(RemoveMatches.bind(null, allMatches), 300);
+            setTimeout(MoveCellsDown, 900);
+            setTimeout(Refill, 1200);*/
           } else {
             setTimeout(SwitchCells.bind(null, this, selectedCell),300);
             canPick = true;
@@ -145,19 +153,27 @@ function FindMatches(cells) {
 }
 
 function MoveCellsDown() {
+  movingCells = 0;
+  movesCompleted = 0;
   var nullcount = 0;
   for (var i = width -1; i >= 0; i--) {
     for (var j = height -1; j >= 0; j--) {
       if (playfield[i][j] == null) {
         nullcount++;
       } else if(nullcount > 0){
-        playfield[i][j].MoveToNewCell(inGameRef,i, j+nullcount);
+        movingCells++;
+        playfield[i][j].MoveToNewCell(inGameRef,i, j+nullcount, Counter);
         playfield[i][j+nullcount] = playfield[i][j];
         playfield[i][j] = null;
       }
     }
     nullcount = 0;
   }
+  started = true;
+}
+
+function Counter() {
+  movesCompleted++;
 }
 
 function Refill() {
@@ -184,49 +200,30 @@ function Refill() {
   }
   allMatches = Array.from(new Set(allMatches));
   if (allMatches.length > 0) {
-    setTimeout(RemoveMatches.bind(null, allMatches), 300);
-    setTimeout(MoveCellsDown, 600);
-    setTimeout(Refill, 900);
+    RemoveMatches(allMatches);
+    /*setTimeout(RemoveMatches.bind(null, allMatches), 300);
+    setTimeout(MoveCellsDown, 900);
+    setTimeout(Refill, 1200);*/
   } else {
     canPick = true;
   }
 }
 
 function RemoveMatches(matches) {
-  /*for (var i = 0; i < matches.length; i++) {
-    var removeAnim = inGameRef.add.tween({
-      targets: playfield[matches[i].column][matches[i].row],
-      onComplete: function() {
-        console.log("Column: " + this.targets[0].column + " and Row: " + this.targets[0].row);
-        console.log(playfield[this.targets[0].column][this.targets[0].row]);
-        playfield[this.targets[0].column][this.targets[0].row].destroy(inGameRef);
-        playfield[this.targets[0].column][this.targets[0].row] = null;
-      },
-      props: {
-        scaleX: { value: '-=0.1', duration: 300, ease: 'Liniar' },
-        scaleY: { value: '-=0.1', duration: 300, ease: 'Liniar' }
-      }
-    });
-    console.log(playfield[matches[i].column][matches[i].row]);
-    console.log(removeAnim.targets);
-  }*/
-   for (var i = 0; i < matches.length; i++) {
-    playfield[matches[i].column][matches[i].row].destroy(inGameRef);
-    playfield[matches[i].column][matches[i].row] = null;
-  }
-  /*var removeAnim = inGameRef.add.tween({
+  var removeAnim = inGameRef.add.tween({
     targets: matches,
     onComplete: function() {
-      console.log("Column: " + this.targets[0].column + " and Row: " + this.targets[0].row);
-      console.log(playfield[this.targets[0].column][this.targets[0].row]);
-      playfield[this.targets[0].column][this.targets[0].row].destroy(inGameRef);
-      playfield[this.targets[0].column][this.targets[0].row] = null;
+      for (var i = 0; i < this.targets.length; i++) {
+        playfield[this.targets[i].column][this.targets[i].row].destroy(inGameRef);
+        playfield[this.targets[i].column][this.targets[i].row] = null;
+      }
+      MoveCellsDown();
     },
     props: {
       scaleX: { value: '-=0.1', duration: 300, ease: 'Liniar' },
       scaleY: { value: '-=0.1', duration: 300, ease: 'Liniar' }
     }
-  });*/
+  });
 }
 
 function HorizontalMatch(cell) {

@@ -14,7 +14,7 @@ class Cell extends Phaser.GameObjects.Image {
     ref.add.existing(this).setScale(0.1);
   }
 
-  MoveToNewCell(ref, newColumn, newRow){
+  MoveToNewCell(ref, newColumn, newRow, count){
     this.column = newColumn;
     this.row = newRow;
     this.name = "( " + this.column + " , " + this.row + " )";
@@ -22,11 +22,14 @@ class Cell extends Phaser.GameObjects.Image {
     var y = this.size + this.row * this.size;
     var moveAnim = ref.add.tween({
       targets: this,
+      completeDelay: 300,
+      onComplete: count,
       props: {
         x: { value: x, duration: 300, ease: 'Liniar' },
         y: { value: y, duration: 300, ease: 'Liniar' }
       }
     });
+    return moveAnim;
     //console.log(ref);
     /*moveAnim.to({x,y},200, Phaser.Easing.Liniar.none);
     moveAnim.start();*/
