@@ -127,8 +127,8 @@ function StopSwipe(pointer) {
 function SwitchCells(cell1, cell2) {
   tempCol = cell1.column;
   tempRow = cell1.row;
-  cell1.MoveToNewCell(cell2.column, cell2.row);
-  cell2.MoveToNewCell(tempCol, tempRow);
+  cell1.MoveToNewCell(inGameRef,cell2.column, cell2.row);
+  cell2.MoveToNewCell(inGameRef,tempCol, tempRow);
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
 }
@@ -151,7 +151,7 @@ function MoveCellsDown() {
       if (playfield[i][j] == null) {
         nullcount++;
       } else if(nullcount > 0){
-        playfield[i][j].MoveToNewCell(i, j+nullcount);
+        playfield[i][j].MoveToNewCell(inGameRef,i, j+nullcount);
         playfield[i][j+nullcount] = playfield[i][j];
         playfield[i][j] = null;
       }
@@ -193,10 +193,40 @@ function Refill() {
 }
 
 function RemoveMatches(matches) {
-  for (var i = 0; i < matches.length; i++) {
+  /*for (var i = 0; i < matches.length; i++) {
+    var removeAnim = inGameRef.add.tween({
+      targets: playfield[matches[i].column][matches[i].row],
+      onComplete: function() {
+        console.log("Column: " + this.targets[0].column + " and Row: " + this.targets[0].row);
+        console.log(playfield[this.targets[0].column][this.targets[0].row]);
+        playfield[this.targets[0].column][this.targets[0].row].destroy(inGameRef);
+        playfield[this.targets[0].column][this.targets[0].row] = null;
+      },
+      props: {
+        scaleX: { value: '-=0.1', duration: 300, ease: 'Liniar' },
+        scaleY: { value: '-=0.1', duration: 300, ease: 'Liniar' }
+      }
+    });
+    console.log(playfield[matches[i].column][matches[i].row]);
+    console.log(removeAnim.targets);
+  }*/
+   for (var i = 0; i < matches.length; i++) {
     playfield[matches[i].column][matches[i].row].destroy(inGameRef);
     playfield[matches[i].column][matches[i].row] = null;
   }
+  /*var removeAnim = inGameRef.add.tween({
+    targets: matches,
+    onComplete: function() {
+      console.log("Column: " + this.targets[0].column + " and Row: " + this.targets[0].row);
+      console.log(playfield[this.targets[0].column][this.targets[0].row]);
+      playfield[this.targets[0].column][this.targets[0].row].destroy(inGameRef);
+      playfield[this.targets[0].column][this.targets[0].row] = null;
+    },
+    props: {
+      scaleX: { value: '-=0.1', duration: 300, ease: 'Liniar' },
+      scaleY: { value: '-=0.1', duration: 300, ease: 'Liniar' }
+    }
+  });*/
 }
 
 function HorizontalMatch(cell) {
@@ -225,9 +255,6 @@ function HorizontalMatch(cell) {
   horizonList.shift();
 
   if (horizonList.length >= 3) {
-    for (var i = 0; i < horizonList.length; i++) {
-      horizonList[i].setScale(0.09);
-    }
     return horizonList;
   }
 }
@@ -258,9 +285,6 @@ function VerticalMatch(cell) {
   vertiList.shift();
 
   if (vertiList.length >= 3) {
-    for (var i = 0; i < vertiList.length; i++) {
-      vertiList[i].setScale(0.09);
-    }
     return vertiList;
   }
 }
