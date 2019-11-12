@@ -25,7 +25,7 @@ var movingCells = 0;
 var movesCompleted = 0;
 var started = false;
 var state;
-var states = ["Selecting", "Removing", "Refilling"];
+var states = ["Selecting", "Removing", "Refilling", "Waiting"];
 var func;
 var maxDif = 10;
 
@@ -90,6 +90,16 @@ function ManageGame(){
         movingCells = 0;
         func();
         state = states[1];
+      }
+      break;
+    case states[3]:
+      if (movesCompleted == movingCells && started) {
+        started = false;
+        movesCompleted = 0;
+        movingCells = 0;
+        canPick = true;
+        func = null;
+        state = states[0];
       }
       break;
     default:
@@ -283,9 +293,8 @@ function Refill() {
     state = states[2];
     started = true;
   } else {
-    canPick = true;
-    func = null;
-    state = states[0];
+    state = states[3];
+    started = true;
   }
 }
 
