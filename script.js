@@ -27,6 +27,9 @@ var inGameRef;
 var movingCells = 0;
 var movesCompleted = 0;
 var started = false;
+var state;
+var states = ["Selecting", "Removing", "Refilling"];
+var func;
 
 function preload ()
 {
@@ -53,15 +56,46 @@ function create ()
   background.displayHeight = window.innerHeight;
   background.displayWidth = window.innerWidth;
   SetField(this);
+  state = states[0];
   this.input.on('pointermove', StartSwipe);
   this.input.on('pointerup', StopSwipe);
 }
 
 function update ()
 {
-  if (movesCompleted == movingCells && started) {
-    started = false;
-    Refill();
+  ManageGame();
+}
+
+function ManageGame(){
+  switch (state) {
+    case states[0]:
+      if (movesCompleted == movingCells && started) {
+        started = false;
+        movesCompleted = 0;
+        movingCells = 0;
+        func();
+        state = states[1];
+      }
+      break;
+    case states[1]:
+      if (movesCompleted == movingCells && started) {
+        started = false;
+        movesCompleted = 0;
+        movingCells = 0;
+        func();
+      }
+      break;
+    case states[2]:
+      if (movesCompleted == movingCells && started) {
+        started = false;
+        movesCompleted = 0;
+        movingCells = 0;
+        func();
+        state = states[1];
+      }
+      break;
+    default:
+
   }
 }
 
@@ -95,21 +129,20 @@ function Select(pointer) {
         selectedCell = null;
       } else {
         if (((this.column == selectedCell.column +1 || this.column == selectedCell.column - 1) && this.row == selectedCell.row) || ((this.row == selectedCell.row +1 || this.row == selectedCell.row - 1) && this.column == selectedCell.column)) {
-          console.log("They are next to eachother!!!");
           canPick = false;
           selectedCell.setScale(0.1);
+          movesCompleted = 0;
+          movingCells = 2;
           SwitchCells(this, selectedCell);
           allMatches = FindMatches([this, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            RemoveMatches(allMatches);
-            /*setTimeout(RemoveMatches.bind(null, allMatches), 300);
-            setTimeout(MoveCellsDown, 900);
-            setTimeout(Refill, 1200);*/
+            func = RemoveMatches.bind(null, allMatches);
+            started = true;
           } else {
-            setTimeout(SwitchCells.bind(null, this, selectedCell),300);
+            func = SwitchCells.bind(null, this, selectedCell);
+            started = true;
             canPick = true;
-            console.log("test");
           }
           selectedCell = null;
         } else {
@@ -135,8 +168,8 @@ function StopSwipe(pointer) {
 function SwitchCells(cell1, cell2) {
   tempCol = cell1.column;
   tempRow = cell1.row;
-  cell1.MoveToNewCell(inGameRef,cell2.column, cell2.row);
-  cell2.MoveToNewCell(inGameRef,tempCol, tempRow);
+  cell1.MoveToNewCell(inGameRef,cell2.column, cell2.row, 300, Counter);
+  cell2.MoveToNewCell(inGameRef,tempCol, tempRow, 300, Counter);
   playfield[cell1.column][cell1.row] = cell1;
   playfield[cell2.column][cell2.row] = cell2;
 }
@@ -162,13 +195,14 @@ function MoveCellsDown() {
         nullcount++;
       } else if(nullcount > 0){
         movingCells++;
-        playfield[i][j].MoveToNewCell(inGameRef,i, j+nullcount, Counter);
+        playfield[i][j].MoveToNewCell(inGameRef, i, j+nullcount, 300, Counter);
         playfield[i][j+nullcount] = playfield[i][j];
         playfield[i][j] = null;
       }
     }
     nullcount = 0;
   }
+  func = Refill;
   started = true;
 }
 
@@ -187,10 +221,14 @@ function Refill() {
     }
   }
 
+  movingCells = 0;
+  movesCompleted = 0;
   for (var i = emptySpots.length - 1; i >= 0; i--) {
     randNum = Math.floor((Math.random() * types.length));
-    cell = new Cell(emptySpots[i].i,emptySpots[i].j,types[randNum],inGameRef, cellSpacing);
+    cell = new Cell(emptySpots[i].i,emptySpots[emptySpots.length - 1 - i].j - height,types[randNum],inGameRef, cellSpacing);
     cell.on('pointerdown', Select);
+    movingCells++;
+    cell.MoveToNewCell(inGameRef, emptySpots[i].i, emptySpots[i].j, 500, Counter);
     playfield[emptySpots[i].i][emptySpots[i].j] = cell;
   }
 
@@ -200,12 +238,13 @@ function Refill() {
   }
   allMatches = Array.from(new Set(allMatches));
   if (allMatches.length > 0) {
-    RemoveMatches(allMatches);
-    /*setTimeout(RemoveMatches.bind(null, allMatches), 300);
-    setTimeout(MoveCellsDown, 900);
-    setTimeout(Refill, 1200);*/
+    func = RemoveMatches.bind(null, allMatches);
+    state = states[2];
+    started = true;
   } else {
     canPick = true;
+    func = null;
+    state = states[0];
   }
 }
 
