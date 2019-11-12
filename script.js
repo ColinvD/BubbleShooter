@@ -15,11 +15,8 @@ var height = 10;
 var cellSpacing = 60;
 var playfield = [];
 var types = [];
-var startClickPos, endClickPos = {
-  x: null,
-  y: null,
-  z: null
-}
+var startClickPos = {x: null, y: null};
+var endClickPos = {x: null, y: null};
 var dragging = false;
 var canPick = true;
 var selectedCell = null;
@@ -30,6 +27,7 @@ var started = false;
 var state;
 var states = ["Selecting", "Removing", "Refilling"];
 var func;
+var maxDif = 10;
 
 function preload ()
 {
@@ -120,6 +118,8 @@ function SetField() {
 function Select(pointer) {
   if (canPick) {
     dragging = true;
+    startClickPos.x = pointer.worldX;
+    startClickPos.y = pointer.worldY;
     if (selectedCell == null) {
       this.setScale(0.15);
       selectedCell = this;
@@ -156,8 +156,49 @@ function Select(pointer) {
 }
 
 function StartSwipe(pointer) {
-  if (dragging) {
-    console.log(pointer.worldX);
+  if (dragging && selectedCell != null) {
+    endClickPos.x = pointer.worldX;
+    endClickPos.y = pointer.worldY;
+
+    distance = Math.sqrt(Math.pow(Math.abs(endClickPos.y) - Math.abs(startClickPos.y),2) + Math.pow(Math.abs(endClickPos.x) - Math.abs(startClickPos.x),2));
+    if (distance > maxDif) {
+      dragging = false;
+      angle = Math.atan2(endClickPos.y - startClickPos.y, endClickPos.x - startClickPos.x) * 180 / Math.PI;
+      var otherCell;
+
+      if (angle > -45 && angle <= 45 && selectedCell.column != width -1) {
+        //right
+        otherCell = playfield[selectedCell.column + 1][selectedCell.row];
+      } else if (angle < -45 && angle >= -135 && selectedCell.row != 0) {
+        //up
+        otherCell = playfield[selectedCell.column][selectedCell.row -1];
+      } else if (angle > 135 || angle <= -135 && selectedCell.column != 0){
+        //left
+        otherCell = playfield[selectedCell.column - 1][selectedCell.row];
+      } else if (angle > 45 && angle <= 135 && selectedCell.row != height -1){
+        //down
+        otherCell = playfield[selectedCell.column][selectedCell.row + 1];
+      }
+
+      if (((otherCell.column == selectedCell.column +1 || otherCell.column == selectedCell.column - 1) && otherCell.row == selectedCell.row) || ((otherCell.row == selectedCell.row +1 || otherCell.row == selectedCell.row - 1) && otherCell.column == selectedCell.column)) {
+        canPick = false;
+        selectedCell.setScale(0.1);
+        movesCompleted = 0;
+        movingCells = 2;
+        SwitchCells(otherCell, selectedCell);
+        allMatches = FindMatches([otherCell, selectedCell]);
+        allMatches = Array.from(new Set(allMatches));
+        if (allMatches.length > 0) {
+          func = RemoveMatches.bind(null, allMatches);
+          started = true;
+        } else {
+          func = SwitchCells.bind(null, otherCell, selectedCell);
+          started = true;
+          canPick = true;
+        }
+        selectedCell = null;
+      }
+    }
   }
 }
 
