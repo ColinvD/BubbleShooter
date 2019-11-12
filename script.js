@@ -48,11 +48,16 @@ function preload ()
 function create ()
 {
   inGameRef = this;
-  background = this.add.image(765,375,"background");
-  background.height = window.innerHeight;
+  background = this.add.image(0,0,"background");
+  /*background.height = window.innerHeight;
   background.width = window.innerWidth;
   background.displayHeight = window.innerHeight;
-  background.displayWidth = window.innerWidth;
+  background.displayWidth = window.innerWidth;*/
+  background.displayHeight = game.config.height;
+  background.scaleX = background.scaleY*4;
+  background.y = game.config.height/2;
+  background.x = game.config.width/2;
+
   SetField(this);
   state = states[0];
   this.input.on('pointermove', StartSwipe);
@@ -174,7 +179,7 @@ function StartSwipe(pointer) {
     if (distance > maxDif) {
       dragging = false;
       angle = Math.atan2(endClickPos.y - startClickPos.y, endClickPos.x - startClickPos.x) * 180 / Math.PI;
-      var otherCell;
+      var otherCell = null;
 
       if (angle > -45 && angle <= 45 && selectedCell.column != width -1) {
         //right
@@ -190,23 +195,25 @@ function StartSwipe(pointer) {
         otherCell = playfield[selectedCell.column][selectedCell.row + 1];
       }
 
-      if (((otherCell.column == selectedCell.column +1 || otherCell.column == selectedCell.column - 1) && otherCell.row == selectedCell.row) || ((otherCell.row == selectedCell.row +1 || otherCell.row == selectedCell.row - 1) && otherCell.column == selectedCell.column)) {
-        canPick = false;
-        selectedCell.setScale(0.1);
-        movesCompleted = 0;
-        movingCells = 2;
-        SwitchCells(otherCell, selectedCell);
-        allMatches = FindMatches([otherCell, selectedCell]);
-        allMatches = Array.from(new Set(allMatches));
-        if (allMatches.length > 0) {
-          func = RemoveMatches.bind(null, allMatches);
-          started = true;
-        } else {
-          func = SwitchCells.bind(null, otherCell, selectedCell);
-          started = true;
-          canPick = true;
+      if (otherCell != null) {
+        if (((otherCell.column == selectedCell.column +1 || otherCell.column == selectedCell.column - 1) && otherCell.row == selectedCell.row) || ((otherCell.row == selectedCell.row +1 || otherCell.row == selectedCell.row - 1) && otherCell.column == selectedCell.column)) {
+          canPick = false;
+          selectedCell.setScale(0.1);
+          movesCompleted = 0;
+          movingCells = 2;
+          SwitchCells(otherCell, selectedCell);
+          allMatches = FindMatches([otherCell, selectedCell]);
+          allMatches = Array.from(new Set(allMatches));
+          if (allMatches.length > 0) {
+            func = RemoveMatches.bind(null, allMatches);
+            started = true;
+          } else {
+            func = SwitchCells.bind(null, otherCell, selectedCell);
+            started = true;
+            canPick = true;
+          }
+          selectedCell = null;
         }
-        selectedCell = null;
       }
     }
   }
