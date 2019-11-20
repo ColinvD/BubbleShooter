@@ -127,14 +127,14 @@ function Select(pointer) {
           selectedCell.setScale(0.1);
           movesCompleted = 0;
           movingCells = 2;
-          field.SwitchCells(this, selectedCell);
+          field.SwitchCells(this, selectedCell, field);
           allMatches = field.FindMatches([this, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
             func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown.bind(null, field));
             started = true;
           } else {
-            func = field.SwitchCells.bind(null, this, selectedCell);
+            func = field.SwitchCells.bind(null, this, selectedCell, field);
             started = true;
             canPick = true;
           }
@@ -180,14 +180,14 @@ function StartSwipe(pointer) {
           selectedCell.setScale(0.1);
           movesCompleted = 0;
           movingCells = 2;
-          field.SwitchCells(otherCell, selectedCell);
+          field.SwitchCells(otherCell, selectedCell, field);
           allMatches = field.FindMatches([otherCell, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
             func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown);
             started = true;
           } else {
-            func = field.SwitchCells.bind(null, otherCell, selectedCell);
+            func = field.SwitchCells.bind(null, otherCell, selectedCell, field);
             started = true;
             canPick = true;
           }

@@ -46,13 +46,13 @@ class Field {
     return false;
   }
 
-  SwitchCells(cell1, cell2) {
+  SwitchCells(cell1, cell2, field) {
     var tempCol = cell1.column;
     var tempRow = cell1.row;
     cell1.MoveToNewCell(inGameRef,cell2.column, cell2.row, 300, Counter);
     cell2.MoveToNewCell(inGameRef,tempCol, tempRow, 300, Counter);
-    this.playfield[cell1.column][cell1.row] = cell1;
-    this.playfield[cell2.column][cell2.row] = cell2;
+    field.playfield[cell1.column][cell1.row] = cell1;
+    field.playfield[cell2.column][cell2.row] = cell2;
   }
 
   FindMatches(cells) {
