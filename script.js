@@ -13,7 +13,8 @@ var game = new Phaser.Game(config);
 var width = 6;
 var height = 10;
 var cellSpacing = 60;
-var playfield = [];
+//var playfield = [];
+var field;
 var types = [];
 var startClickPos = {x: null, y: null};
 var endClickPos = {x: null, y: null};
@@ -49,16 +50,12 @@ function create ()
 {
   inGameRef = this;
   background = this.add.image(0,0,"background");
-  /*background.height = window.innerHeight;
-  background.width = window.innerWidth;
-  background.displayHeight = window.innerHeight;
-  background.displayWidth = window.innerWidth;*/
   background.displayHeight = game.config.height;
   background.scaleX = background.scaleY*4;
   background.y = game.config.height/2;
   background.x = game.config.width/2;
 
-  SetField(this);
+  field = new Field(types);
   state = states[0];
   this.input.on('pointermove', StartSwipe);
   this.input.on('pointerup', StopSwipe);
@@ -112,24 +109,6 @@ function ManageGame(){
   }
 }
 
-function SetField() {
-  for (var i = 0; i < width; i++) {
-    playfield[i] = [];
-    for (var j = 0; j < height; j++) {
-      randNum = Math.floor((Math.random() * types.length));
-      randType = {};
-      randType.tag = types[randNum];
-      while (ScanForStartMatches(i,j,randType)) {
-        randNum = Math.floor((Math.random() * types.length));
-        randType.tag = types[randNum];
-      }
-      cell = new Cell(i,j,randType.tag,inGameRef, cellSpacing);
-      cell.on('pointerdown', Select);
-      playfield[i][j] = cell;
-    }
-  }
-}
-
 function Select(pointer) {
   if (canPick) {
     dragging = true;
@@ -148,14 +127,14 @@ function Select(pointer) {
           selectedCell.setScale(0.1);
           movesCompleted = 0;
           movingCells = 2;
-          SwitchCells(this, selectedCell);
-          allMatches = FindMatches([this, selectedCell]);
+          field.SwitchCells(this, selectedCell);
+          allMatches = field.FindMatches([this, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            func = RemoveMatches.bind(null, allMatches);
+            func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown.bind(null, field));
             started = true;
           } else {
-            func = SwitchCells.bind(null, this, selectedCell);
+            func = field.SwitchCells.bind(null, this, selectedCell);
             started = true;
             canPick = true;
           }
@@ -183,16 +162,16 @@ function StartSwipe(pointer) {
 
       if (angle > -45 && angle <= 45 && selectedCell.column != width -1) {
         //right
-        otherCell = playfield[selectedCell.column + 1][selectedCell.row];
+        otherCell = field.playfield[selectedCell.column + 1][selectedCell.row];
       } else if (angle < -45 && angle >= -135 && selectedCell.row != 0) {
         //up
-        otherCell = playfield[selectedCell.column][selectedCell.row -1];
+        otherCell = field.playfield[selectedCell.column][selectedCell.row -1];
       } else if (angle > 135 || angle <= -135 && selectedCell.column != 0){
         //left
-        otherCell = playfield[selectedCell.column - 1][selectedCell.row];
+        otherCell = field.playfield[selectedCell.column - 1][selectedCell.row];
       } else if (angle > 45 && angle <= 135 && selectedCell.row != height -1){
         //down
-        otherCell = playfield[selectedCell.column][selectedCell.row + 1];
+        otherCell = field.playfield[selectedCell.column][selectedCell.row + 1];
       }
 
       if (otherCell != null) {
@@ -201,14 +180,14 @@ function StartSwipe(pointer) {
           selectedCell.setScale(0.1);
           movesCompleted = 0;
           movingCells = 2;
-          SwitchCells(otherCell, selectedCell);
-          allMatches = FindMatches([otherCell, selectedCell]);
+          field.SwitchCells(otherCell, selectedCell);
+          allMatches = field.FindMatches([otherCell, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            func = RemoveMatches.bind(null, allMatches);
+            func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown);
             started = true;
           } else {
-            func = SwitchCells.bind(null, otherCell, selectedCell);
+            func = field.SwitchCells.bind(null, otherCell, selectedCell);
             started = true;
             canPick = true;
           }
@@ -223,184 +202,6 @@ function StopSwipe(pointer) {
   dragging = false;
 }
 
-function SwitchCells(cell1, cell2) {
-  tempCol = cell1.column;
-  tempRow = cell1.row;
-  cell1.MoveToNewCell(inGameRef,cell2.column, cell2.row, 300, Counter);
-  cell2.MoveToNewCell(inGameRef,tempCol, tempRow, 300, Counter);
-  playfield[cell1.column][cell1.row] = cell1;
-  playfield[cell2.column][cell2.row] = cell2;
-}
-
-function FindMatches(cells) {
-  var allMatches = [];
-  for (var i = 0; i < cells.length; i++) {
-    var horizonMatches = HorizontalMatch(cells[i]);
-    var vertiMatches = VerticalMatch(cells[i]);
-    Array.prototype.push.apply(allMatches, horizonMatches);
-    Array.prototype.push.apply(allMatches, vertiMatches);
-  }
-  return allMatches;
-}
-
-function MoveCellsDown() {
-  movingCells = 0;
-  movesCompleted = 0;
-  var nullcount = 0;
-  for (var i = width -1; i >= 0; i--) {
-    for (var j = height -1; j >= 0; j--) {
-      if (playfield[i][j] == null) {
-        nullcount++;
-      } else if(nullcount > 0){
-        movingCells++;
-        playfield[i][j].MoveToNewCell(inGameRef, i, j+nullcount, 300, Counter);
-        playfield[i][j+nullcount] = playfield[i][j];
-        playfield[i][j] = null;
-      }
-    }
-    nullcount = 0;
-  }
-  func = Refill;
-  started = true;
-}
-
 function Counter() {
   movesCompleted++;
-}
-
-function Refill() {
-  var emptySpots = [];
-  for (var i = 0; i < width; i++) {
-    for (var j = 0; j < height; j++) {
-      if (playfield[i][j] == null) {
-        spot = {i,j};
-        emptySpots.push(spot);
-      }
-    }
-  }
-
-  movingCells = 0;
-  movesCompleted = 0;
-  for (var i = emptySpots.length - 1; i >= 0; i--) {
-    randNum = Math.floor((Math.random() * types.length));
-    cell = new Cell(emptySpots[i].i,emptySpots[emptySpots.length - 1 - i].j - height,types[randNum],inGameRef, cellSpacing);
-    cell.on('pointerdown', Select);
-    movingCells++;
-    cell.MoveToNewCell(inGameRef, emptySpots[i].i, emptySpots[i].j, 500, Counter);
-    playfield[emptySpots[i].i][emptySpots[i].j] = cell;
-  }
-
-  allMatches = [];
-  for (var i = 0; i < width; i++) {
-    Array.prototype.push.apply(allMatches, FindMatches(playfield[i]));
-  }
-  allMatches = Array.from(new Set(allMatches));
-  if (allMatches.length > 0) {
-    func = RemoveMatches.bind(null, allMatches);
-    state = states[2];
-    started = true;
-  } else {
-    state = states[3];
-    started = true;
-  }
-}
-
-function RemoveMatches(matches) {
-  var removeAnim = inGameRef.add.tween({
-    targets: matches,
-    onComplete: function() {
-      for (var i = 0; i < this.targets.length; i++) {
-        playfield[this.targets[i].column][this.targets[i].row].destroy(inGameRef);
-        playfield[this.targets[i].column][this.targets[i].row] = null;
-      }
-      MoveCellsDown();
-    },
-    props: {
-      scaleX: { value: '-=0.1', duration: 300, ease: 'Liniar' },
-      scaleY: { value: '-=0.1', duration: 300, ease: 'Liniar' }
-    }
-  });
-}
-
-function HorizontalMatch(cell) {
-  var leftlist = [cell];
-  var rightlist = [cell];
-  var horizonList = [];
-
-  for (var i = 0; i < leftlist.length; i++) {
-    if (leftlist[i].column > 0) {
-      if (leftlist[i].tag == playfield[leftlist[i].column-1][leftlist[i].row].tag) {
-        leftlist.push(playfield[leftlist[i].column-1][leftlist[i].row]);
-      }
-    }
-  }
-
-  for (var i = 0; i < rightlist.length; i++) {
-    if (rightlist[i].column < width - 1) {
-      if (rightlist[i].tag == playfield[rightlist[i].column+1][rightlist[i].row].tag) {
-        rightlist.push(playfield[rightlist[i].column+1][rightlist[i].row]);
-      }
-    }
-  }
-
-  Array.prototype.push.apply(horizonList, leftlist);
-  Array.prototype.push.apply(horizonList, rightlist);
-  horizonList.shift();
-
-  if (horizonList.length >= 3) {
-    return horizonList;
-  }
-}
-
-function VerticalMatch(cell) {
-  var uplist = [cell];
-  var downlist = [cell];
-  var vertiList = [];
-
-  for (var i = 0; i < uplist.length; i++) {
-    if (uplist[i].row > 0) {
-      if (uplist[i].tag == playfield[uplist[i].column][uplist[i].row-1].tag) {
-        uplist.push(playfield[uplist[i].column][uplist[i].row-1]);
-      }
-    }
-  }
-
-  for (var i = 0; i < downlist.length; i++) {
-    if (downlist[i].row < height - 1) {
-      if (downlist[i].tag == playfield[downlist[i].column][downlist[i].row+1].tag) {
-        downlist.push(playfield[downlist[i].column][downlist[i].row+1]);
-      }
-    }
-  }
-
-  Array.prototype.push.apply(vertiList, uplist);
-  Array.prototype.push.apply(vertiList, downlist);
-  vertiList.shift();
-
-  if (vertiList.length >= 3) {
-    return vertiList;
-  }
-}
-
-function ScanForStartMatches(column, row, object) {
-  if (column > 1 && row > 1) {
-    if (playfield[column -1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
-      return true;
-    }
-    if (playfield[column][row-1].tag == object.tag && playfield[column][row-2].tag == object.tag) {
-      return true;
-    }
-  } else if (column <= 1 || row <= 1){
-    if (row > 1) {
-      if (playfield[column][row -1].tag == object.tag && playfield[column][row -2].tag == object.tag) {
-        return true;
-      }
-    }
-    if (column > 1) {
-      if (playfield[column-1][row].tag == object.tag && playfield[column-2][row].tag == object.tag) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
