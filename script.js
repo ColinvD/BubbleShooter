@@ -73,8 +73,8 @@ function ManageGame(){
         started = false;
         movesCompleted = 0;
         movingCells = 0;
-        func();
         state = states[1];
+        func();
       }
       break;
     case states[1]:
@@ -135,6 +135,7 @@ function Select(pointer) {
             started = true;
           } else {
             func = field.SwitchCells.bind(null, this, selectedCell, field);
+            state = states[0];
             started = true;
             canPick = true;
           }
@@ -184,7 +185,7 @@ function StartSwipe(pointer) {
           allMatches = field.FindMatches([otherCell, selectedCell]);
           allMatches = Array.from(new Set(allMatches));
           if (allMatches.length > 0) {
-            func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown);
+            func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown.bind(null, field));
             started = true;
           } else {
             func = field.SwitchCells.bind(null, otherCell, selectedCell, field);
