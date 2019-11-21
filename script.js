@@ -96,6 +96,7 @@ function ManageGame(){
       break;
     case states[3]:
       if (movesCompleted == movingCells && started) {
+        func();
         started = false;
         movesCompleted = 0;
         movingCells = 0;
@@ -135,9 +136,8 @@ function Select(pointer) {
             started = true;
           } else {
             func = field.SwitchCells.bind(null, this, selectedCell, field);
-            state = states[0];
+            state = states[3];
             started = true;
-            canPick = true;
           }
           selectedCell = null;
         } else {
@@ -189,8 +189,8 @@ function StartSwipe(pointer) {
             started = true;
           } else {
             func = field.SwitchCells.bind(null, otherCell, selectedCell, field);
+            state = states[3];
             started = true;
-            canPick = true;
           }
           selectedCell = null;
         }
