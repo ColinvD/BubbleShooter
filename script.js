@@ -33,6 +33,8 @@ var maxDif = 10;
 function preload ()
 {
   this.load.image("background", "Assets/ui_assets/bg.png");
+  this.load.image("popupbg", "Assets/ui_assets/popup_base.png");
+  this.load.image("popuptop", "Assets/ui_assets/popup_header.png");
   //this.load.image("bear", "Assets/characters/Bear/Grey-Bear.png");
   //this.load.image("cat", "Assets/characters/Cat/White-Cat.png");
   this.load.image("deer", "Assets/characters/Deer/Brown-Deer.png");
@@ -56,7 +58,7 @@ function create ()
   background.x = game.config.width/2;
 
   field = new Field(types);
-  timer = new Countdown(400, 40, 300, inGameRef);
+  timer = new Countdown(400, 40, 180, inGameRef, EndScreen);
   timer.StartCountdown();
   state = states[0];
   this.input.on('pointermove', StartSwipe);
@@ -207,4 +209,13 @@ function StopSwipe(pointer) {
 
 function Counter() {
   movesCompleted++;
+}
+
+function EndScreen(){
+  var popupBG = inGameRef.add.image(200,300,"popupbg");
+  var popupTop = inGameRef.add.image(200,175,"popuptop").setScale(0.75);
+  var popupText = inGameRef.add.text(100, 250, "Hello I want to see how long this will go");
+  popupText.setColor("#000f2b");
+  popupText.setWordWrapWidth(200);
+  canPick = false;
 }
