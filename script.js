@@ -56,6 +56,8 @@ function create ()
   background.x = game.config.width/2;
 
   field = new Field(types);
+  timer = new Countdown(400, 40, 300, inGameRef);
+  timer.StartCountdown();
   state = states[0];
   this.input.on('pointermove', StartSwipe);
   this.input.on('pointerup', StopSwipe);
