@@ -57,6 +57,7 @@ function create ()
   background.x = game.config.width/2;
 
   field = new Field(types);
+  popup = new Popup(200, 300, inGameRef);
   scoreManager = new ScoreManager(400, 80, inGameRef);
   timer = new Countdown(400, 40, 180, inGameRef, EndScreen);
   timer.StartCountdown();
@@ -212,10 +213,16 @@ function Counter() {
 }
 
 function EndScreen(){
-  var popupBG = inGameRef.add.image(200,300,"popupbg");
-  var popupTop = inGameRef.add.image(200,175,"popuptop").setScale(0.75);
-  var popupText = inGameRef.add.text(100, 250, "Hello I want to see how long this will go");
-  popupText.setColor("#000f2b");
-  popupText.setWordWrapWidth(200);
+  var popupText;
+  if (scoreManager.score >= 10000) {
+    popupText = "Nicely done you got a score of " + scoreManager.score;
+  } else if (scoreManager.score > 0 && scoreManager.score < 10000) {
+    popupText = "Well you tried with a score of " + scoreManager.score;
+  } else if (scoreManager.score == 0) {
+    popupText = "Were you even there playing the game?";
+  } else {
+    popupText = "How is it even possible that you get a negative score of " + scoreManager.score;
+  }
+  popup.ShowPopUp(popupText);
   canPick = false;
 }
