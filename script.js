@@ -13,7 +13,6 @@ var game = new Phaser.Game(config);
 var width = 6;
 var height = 10;
 var cellSpacing = 60;
-//var playfield = [];
 var field;
 var types = [];
 var startClickPos = {x: null, y: null};
@@ -58,6 +57,7 @@ function create ()
   background.x = game.config.width/2;
 
   field = new Field(types);
+  scoreManager = new ScoreManager(400, 80, inGameRef);
   timer = new Countdown(400, 40, 180, inGameRef, EndScreen);
   timer.StartCountdown();
   state = states[0];
