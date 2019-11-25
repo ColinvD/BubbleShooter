@@ -63,6 +63,10 @@ class Field {
       Array.prototype.push.apply(allMatches, horizonMatches);
       Array.prototype.push.apply(allMatches, vertiMatches);
     }
+
+    for (var i = 0; i < allMatches.length; i++) {
+      scoreManager.AddScore(100);
+    }
     return allMatches;
   }
 
@@ -115,10 +119,12 @@ class Field {
     }
     allMatches = Array.from(new Set(allMatches));
     if (allMatches.length > 0) {
+      scoreManager.IncreaseMultiplier();
       func = field.RemoveMatches.bind(null, allMatches, field.playfield, field.MoveCellsDown.bind(null, field));
       state = states[2];
       started = true;
     } else {
+      scoreManager.comboMul = 1;
       state = states[3];
       started = true;
     }
@@ -132,6 +138,7 @@ class Field {
           playfield[this.targets[i].column][this.targets[i].row].destroy(inGameRef);
           playfield[this.targets[i].column][this.targets[i].row] = null;
         }
+        scoreManager.UpdateHUD();
         func();
       },
       props: {
