@@ -9,6 +9,16 @@ var config = {
     }
 };
 
+var musicConfig = {
+  mute: false,
+  volume: 1,
+  rate: 1,
+  detune: 0,
+  seek: 0,
+  loop: true,
+  delay: 0
+}
+
 var game = new Phaser.Game(config);
 var width = 6;
 var height = 10;
@@ -25,12 +35,14 @@ var movingCells = 0;
 var movesCompleted = 0;
 var started = false;
 var state;
-var states = ["Selecting", "Removing", "Refilling", "Waiting"];
+var states = ["Selecting", "Removing", "Refilling", "Waiting", "Ending"];
 var func;
 var maxDif = 10;
+var music;
 
 function preload ()
 {
+  this.load.audio("backgroundMusic", "Assets/audio/savanna.mp3");
   this.load.image("background", "Assets/ui_assets/bg.png");
   this.load.image("popupbg", "Assets/ui_assets/popup_base.png");
   this.load.image("popuptop", "Assets/ui_assets/popup_header.png");
@@ -50,6 +62,9 @@ function preload ()
 function create ()
 {
   inGameRef = this;
+
+  music = this.sound.add("backgroundMusic", musicConfig);
+  music.play();
   background = this.add.image(0,0,"background");
   background.displayHeight = game.config.height;
   background.scaleX = background.scaleY*4;
@@ -106,6 +121,17 @@ function ManageGame(){
         movesCompleted = 0;
         movingCells = 0;
         canPick = true;
+        func = null;
+        state = states[0];
+      }
+      break;
+    case states[4]:
+      if (movesCompleted == movingCells && started) {
+        func();
+        started = false;
+        movesCompleted = 0;
+        movingCells = 0;
+        canPick = false;
         func = null;
         state = states[0];
       }
@@ -213,6 +239,7 @@ function Counter() {
 }
 
 function EndScreen(){
+  state = states[4];
   var popupText;
   if (scoreManager.score >= 10000) {
     popupText = "Nicely done you got a score of " + scoreManager.score;
